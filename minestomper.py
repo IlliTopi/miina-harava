@@ -8,10 +8,11 @@ state = {
     "visible_field": [],
     "status": "game",
     "info": "Hidden safe tiles: 0 | Mines: 10",
+    "height": 0,
+    "width": 0,
 }
 
-height = 0
-width = 0
+
 
 def place_mines(field_to_mine,available_tiles,num_of_mines):
     """
@@ -32,21 +33,19 @@ def draw_field():
     sweeperlib.draw_background()
     sweeperlib.begin_sprite_draw()
     if state["status"] == "game":
-        """ for y in range(len(state["field"])):
-            for x in range(len(state["field"][y])):
-                sweeperlib.prepare_sprite(state["field"][y][x],x*40,y*40) """
         for y in range(len(state["visible_field"])):
             for x in range(len(state["visible_field"][y])):
                 sweeperlib.prepare_sprite(state["visible_field"][y][x],x*40,y*40)
                 
-    if state["status"] == "menu":
-        state["status"]
+    if state["status"] == "ending":
+        for y in range(len(state["field"])):
+            for x in range(len(state["field"][y])):
+                sweeperlib.prepare_sprite(state["field"][y][x],x*40,y*40)
     sweeperlib.draw_sprites()
-    sweeperlib.draw_text(state["info"], 10, height + 40,font='arial', size = 10)
+    sweeperlib.draw_text(state["info"], 10, state["height"] + 40,font='arial', size = 10)
 
 def click_handler(x,y,button,_):
-    global height
-    if y  <= height:
+    if y  <= state["height"] and state["status"] == "game":
         click_tile = {"col": math.floor(x/40), "row": math.floor(y/40)}
         if button == sweeperlib.MOUSE_LEFT:
             floodfill(state["field"],click_tile["col"],click_tile["row"])
@@ -61,7 +60,8 @@ def floodfill(planet,x_pos,y_pos):
     x, y coordinates.
     """
     #If the clicked tile is a bomb
-    if(planet[y_pos][x_pos] == "x"): 
+    if(planet[y_pos][x_pos] == "x"):
+        state["status"] = "ending" 
         return
     check_tiles = [(x_pos,y_pos)]
     #Directions for checking tiles
@@ -98,7 +98,7 @@ def main():
     Loads the game graphics, creates a game window and sets a draw handler for it.
     """
     sweeperlib.load_sprites("./sprites")
-    sweeperlib.create_window(width,height+80)
+    sweeperlib.create_window(state["width"],state["height"]+80)
     sweeperlib.set_draw_handler(draw_field)
     sweeperlib.set_mouse_handler(click_handler)
     sweeperlib.start()
@@ -112,17 +112,15 @@ def input_int(prompt):
             print("It has to be whole numbers")
 
 def start_game():
-    global width
-    global height
-    width = input_int("Number of columns: ") * 40
-    height = input_int("Number of rows: ") * 40
+    state["width"] = input_int("Number of columns: ") * 40
+    state["height"] = input_int("Number of rows: ") * 40
     number_of_mines = input_int("Number of mines: ")
 
     field = []
     available_tiles = []
-    for row in range(math.floor(height/40)):
+    for row in range(math.floor(state["height"]/40)):
         field.append([])
-        for col in range(math.floor(width/40)):
+        for col in range(math.floor(state["width"]/40)):
             field[-1].append(" ")
             available_tiles.append((col,row))
     state["field"] = field
