@@ -7,10 +7,11 @@ state = {
     "field": [],
     "visible_field": [],
     "status": "game",
+    "info": "Hidden safe tiles: 0 | Mines: 10",
 }
 
-height = 480
-width = 400
+height = 0
+width = 0
 
 def place_mines(field_to_mine,available_tiles,num_of_mines):
     """
@@ -26,7 +27,7 @@ def draw_field():
     into a game window. This function is called whenever the game engine requests
     a screen update.
     """
-
+    global height
     sweeperlib.clear_window()
     sweeperlib.draw_background()
     sweeperlib.begin_sprite_draw()
@@ -41,16 +42,17 @@ def draw_field():
     if state["status"] == "menu":
         state["status"]
     sweeperlib.draw_sprites()
+    sweeperlib.draw_text(state["info"], 10, height + 40,font='arial', size = 10)
 
 def click_handler(x,y,button,_):
-
-    click_tile = {"col": math.floor(x/40), "row": math.floor(y/40)}
-
-    if(button == sweeperlib.MOUSE_LEFT):
-        floodfill(state["field"],click_tile["col"],click_tile["row"])
-    if(button == sweeperlib.MOUSE_RIGHT):
-        """ state["field"][click_tile["row"]][click_tile["col"]] = "f" """
-        state["visible_field"][click_tile["row"]][click_tile["col"]] = "f"
+    global height
+    if y  <= height:
+        click_tile = {"col": math.floor(x/40), "row": math.floor(y/40)}
+        if button == sweeperlib.MOUSE_LEFT:
+            floodfill(state["field"],click_tile["col"],click_tile["row"])
+        if button == sweeperlib.MOUSE_RIGHT:
+            """ state["field"][click_tile["row"]][click_tile["col"]] = "f" """
+            state["visible_field"][click_tile["row"]][click_tile["col"]] = "f"
     
 
 def floodfill(planet,x_pos,y_pos):
@@ -96,13 +98,26 @@ def main():
     Loads the game graphics, creates a game window and sets a draw handler for it.
     """
     sweeperlib.load_sprites("./sprites")
-    sweeperlib.create_window(width,height)
+    sweeperlib.create_window(width,height+80)
     sweeperlib.set_draw_handler(draw_field)
     sweeperlib.set_mouse_handler(click_handler)
     sweeperlib.start()
     
+def input_int(prompt):
+    while True:
+        try:
+            given_number = int(input(prompt))
+            return given_number
+        except ValueError:
+            print("It has to be whole numbers")
 
-if __name__ == "__main__":
+def start_game():
+    global width
+    global height
+    width = input_int("Number of columns: ") * 40
+    height = input_int("Number of rows: ") * 40
+    number_of_mines = input_int("Number of mines: ")
+
     field = []
     available_tiles = []
     for row in range(math.floor(height/40)):
@@ -112,5 +127,8 @@ if __name__ == "__main__":
             available_tiles.append((col,row))
     state["field"] = field
     state["visible_field"] = copy.deepcopy(field)
-    place_mines(state["field"],available_tiles,100)
+    place_mines(state["field"],available_tiles,number_of_mines)
     main()
+
+if __name__ == "__main__":
+    start_game()
